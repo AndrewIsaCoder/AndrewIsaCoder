@@ -1,5 +1,5 @@
 # 💫 About Me:
-🔭 I’m currently working on web development track progress<br>👯 I’m looking to collaborate on open-source python project / R / Web development<br>🤝 I’m looking for help with web development<br>🌱 I’m currently learning web development<br>💬 Ask me about<br>⚡ Fun fact
+🔭 I’m currently working on web development track progress<br>👯 I’m looking to collaborate on open-source python project / R / Web development<br>🤝 I’m looking for help with web development<br>🌱 I’m currently learning web development
 
 
 ## 🌐 Socials:
@@ -17,5 +17,3 @@
 
 ### ✍️ Random Dev Quote
 ![](https://quotes-github-readme.vercel.app/api?type=horizontal&theme=radical)
-
-<!-- Proudly created with GPRM ( https://gprm.itsvg.in ) -->
