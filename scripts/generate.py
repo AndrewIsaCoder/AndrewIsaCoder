@@ -180,6 +180,7 @@ def ticker_svg(p: dict, avatar: str) -> str:
     chg = price - prev
     chg_pct = chg / prev * 100 if prev else 0.0
     up = chg >= 0
+    pct_txt = f"{'+' if up else '−'}{abs(chg_pct):.2f}%" if prev else "new high"
     col_chg = GREEN if up else RED
     top_lang = next((r["lang"] for r in p["repos"] if r["lang"]), "Code")
     lang_col = LANG_COLORS.get(top_lang, "#f0883e")
@@ -371,7 +372,7 @@ def ticker_svg(p: dict, avatar: str) -> str:
 
   <text x="24" y="108" font-size="34" font-weight="800" fill="{TEXT}">{money(price)}</text>
   <rect x="{36 + len(money(price)) * 19}" y="84" width="150" height="28" rx="6" fill="{col_chg}" class="flash"/>
-  <text x="{48 + len(money(price)) * 19}" y="103" font-family="{MONO}" font-size="13" font-weight="700" fill="{col_chg}">{"▲" if up else "▼"} {sign}{abs(chg) / 100:.2f} ({sign}{abs(chg_pct):.2f}%)</text>
+  <text x="{48 + len(money(price)) * 19}" y="103" font-family="{MONO}" font-size="13" font-weight="700" fill="{col_chg}">{"▲" if up else "▼"} {sign}{abs(chg) / 100:.2f} ({pct_txt})</text>
 
   <g transform="translate({W - 24},44)">
     <text text-anchor="end" font-family="{MONO}" font-size="10" fill="{MUTED}">{dt.date.today():%a %d %b %Y}</text>
