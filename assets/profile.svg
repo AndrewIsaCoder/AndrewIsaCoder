@@ -13,7 +13,7 @@
 <text x="40" y="40" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="11" font-weight="700" fill="#3fb950" letter-spacing="2"><tspan class="blink">▲</tspan> COMPANY PROFILE</text>
 <line x1="1" x2="839" y1="58" y2="58" stroke="#21262d"/>
 <text x="40" y="100" font-size="30" font-weight="800" fill="#e6edf3" class="fade">Stoian Andrei</text>
-<text x="40" y="128" font-size="16" fill="#c9d1d9" class="fade" style="animation-delay:0.40s">Young software developer passionate about coding, with</text><text x="40" y="150" font-size="16" fill="#c9d1d9" class="fade" style="animation-delay:0.55s">experience in Python, SQL, R, and more. I enjoy exploring new</text><text x="40" y="172" font-size="16" fill="#c9d1d9" class="fade" style="animation-delay:0.70s">technologies.</text>
+<text x="40" y="128" font-size="16" fill="#c9d1d9" class="fade" style="animation-delay:0.40s">Young software developer passionate about coding, with</text><text x="40" y="150" font-size="16" fill="#c9d1d9" class="fade" style="animation-delay:0.55s">experience in Python, SQL, R, and more. I enjoy exploring</text><text x="40" y="172" font-size="16" fill="#c9d1d9" class="fade" style="animation-delay:0.70s">diverse projects, from process automation to we</text>
 <text x="40" y="206" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="12" fill="#8b949e" class="fade" style="animation-delay:.9s">1 followers · 21 repositories · ★ 3 stars</text>
 <circle class="halo" cx="720" cy="125" r="60" fill="none" stroke="#3fb950" stroke-width="3"/>
 <circle cx="720" cy="125" r="60" fill="#161b22" stroke="#3fb950" stroke-width="4"/>
