@@ -5,9 +5,5 @@
 <p align="center"><sub>Not financial advice: the price is my contributions in the last 30 days.</sub></p>
 
 <p align="center">
-  <img src="./assets/projects.svg" width="100%" alt="Projects watchlist — my most active repositories" />
-</p>
-
-<p align="center">
   <img src="./assets/profile.svg" width="100%" alt="Stoian Andrei — company profile" />
 </p>

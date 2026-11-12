@@ -304,19 +304,36 @@ def ticker_svg(p: dict, avatar: str) -> str:
         f'<text class="sl">{lab}</text><text y="18" class="sv">{escape(val)}</text></g>'
         for k, (lab, val) in enumerate(stats))
 
-    # ---- scrolling tape
+    # ---- scrolling tape: one chip per project, like a real ticker
+    today = dt.date.today()
     tape_items, tx = [], 0.0
+    CW = 7.45  # approx. width of one 12px bold mono glyph
     for r in p["repos"][:12]:
         lc = LANG_COLORS.get(r["lang"] or "", MUTED)
-        label = escape(r["name"].upper()[:18])
+        age = [(today - dt.date.fromisoformat(c)).days for c in r.get("commits", [])]
+        c30 = sum(1 for a in age if a < 30)
+        p30 = sum(1 for a in age if 30 <= a < 60)
+        if c30 > p30:
+            mv, mcol = f"▲{c30}", GREEN
+        elif c30 < p30:
+            mv, mcol = f"▼{c30}", RED
+        else:
+            mv, mcol = f"•{c30}", MUTED
+        name = r["name"].upper()
+        name = name if len(name) <= 20 else name[:19] + "…"
         ab = escape((r["lang"] or "?")[0].upper())
-        tw = 24 + (len(r["name"][:18]) + 2 + len(str(r["stars"]))) * 8.4
+        x_star = 30 + len(name) * CW + 10
+        x_mv = x_star + (1 + len(str(r["stars"]))) * CW + 8
+        cw = x_mv + len(mv) * CW + 12
         tape_items.append(
-            f'<g transform="translate({tx:.0f},0)"><rect x="0" y="-9" width="16" height="16" rx="3" fill="{lc}"/>'
-            f'<text x="8" y="3" font-size="10" font-weight="700" text-anchor="middle" fill="#0d1117">{ab}</text>'
-            f'<text x="24" y="4" class="tape">{label} <tspan fill="{GREEN}">★{r["stars"]}</tspan></text>'
-            f'<rect x="{tw + 14:.0f}" y="-2" width="4" height="4" fill="#484f58"/></g>')
-        tx += tw + 40
+            f'<g transform="translate({tx:.0f},0)">'
+            f'<rect x="0" y="-13" width="{cw:.0f}" height="26" rx="13" fill="#1c2128" stroke="#30363d"/>'
+            f'<circle cx="13" cy="0" r="9" fill="{lc}"/>'
+            f'<text x="13" y="3.5" font-size="10" font-weight="800" text-anchor="middle" fill="#0d1117">{ab}</text>'
+            f'<text x="30" y="4.2" class="tape">{escape(name)}</text>'
+            f'<text x="{x_star:.0f}" y="4.2" class="tape" fill="#e3b341">★{r["stars"]}</text>'
+            f'<text x="{x_mv:.0f}" y="4.2" class="tape" fill="{mcol}">{mv}</text></g>')
+        tx += cw + 14
     tape = "".join(tape_items)
     tape_w = max(tx, 1)
 
@@ -339,7 +356,7 @@ def ticker_svg(p: dict, avatar: str) -> str:
 .tf{{font-family:{MONO};font-size:10px;font-weight:700}}
 .sl{{font-family:{MONO};font-size:9px;fill:{MUTED};letter-spacing:1px}}
 .sv{{font-family:{MONO};font-size:13px;font-weight:700;fill:{TEXT}}}
-.tape{{font-family:{MONO};font-size:13px;font-weight:700;fill:{TEXT};letter-spacing:.5px}}
+.tape{{font-family:{MONO};font-size:12px;font-weight:700;fill:{TEXT};letter-spacing:.4px}}
 .cd{{transform-box:fill-box;transform-origin:bottom;opacity:0;animation:rise .5s cubic-bezier(.2,.9,.3,1.2) forwards}}
 .vol{{transform-box:fill-box;transform-origin:bottom;opacity:0;animation:rise .45s ease-out forwards}}
 @keyframes rise{{from{{opacity:0;transform:scaleY(0)}}to{{opacity:1;transform:scaleY(1)}}}}
@@ -356,7 +373,7 @@ def ticker_svg(p: dict, avatar: str) -> str:
 @keyframes blink{{to{{visibility:hidden}}}}
 .dash{{stroke-dasharray:2 3;animation:dash 1s linear infinite}}
 @keyframes dash{{to{{stroke-dashoffset:-5}}}}
-.roll{{animation:roll {tape_w / 45:.1f}s linear infinite}}
+.roll{{animation:roll {tape_w / 38:.1f}s linear infinite}}
 @keyframes roll{{to{{transform:translateX(-{tape_w:.0f}px)}}}}
 .fade{{opacity:0;animation:fade .7s ease forwards}}
 @keyframes fade{{to{{opacity:1}}}}
@@ -367,6 +384,8 @@ def ticker_svg(p: dict, avatar: str) -> str:
 </style>
 <defs>
 <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0d1117"/><stop offset="1" stop-color="#090c10"/></linearGradient>
+<linearGradient id="fadeL" x1="0" x2="1"><stop offset=".62" stop-color="#11161d"/><stop offset="1" stop-color="#11161d" stop-opacity="0"/></linearGradient>
+<linearGradient id="fadeR" x1="0" x2="1"><stop offset="0" stop-color="#11161d" stop-opacity="0"/><stop offset="1" stop-color="#11161d"/></linearGradient>
 <clipPath id="tapeclip"><rect x="1" y="{H - 50}" width="{W - 2}" height="40"/></clipPath>
 <clipPath id="plot"><rect x="{cx0}" y="{cy0 - 4}" width="{cx1 - cx0}" height="{cy1 - cy0 + 8}"/></clipPath>
 </defs>
@@ -419,8 +438,17 @@ def ticker_svg(p: dict, avatar: str) -> str:
 {stats_svg}
 <text x="24" y="{H - 62}" font-family="{MONO}" font-size="9.5" fill="#484f58">Data: GitHub contribution calendar · candles: weekly O/H/L/C of the 30-day contribution total · refreshed every 6h</text>
 
-<rect x="1" y="{H - 50}" width="{W - 2}" height="40" fill="#161b22"/>
-<g clip-path="url(#tapeclip)"><g transform="translate(20,{H - 30})"><g class="roll">{tape}<g transform="translate({tape_w:.0f},0)">{tape}</g></g></g></g>
+<rect x="1" y="{H - 50}" width="{W - 2}" height="40" fill="#11161d"/>
+<line x1="1" x2="{W - 1}" y1="{H - 50}" y2="{H - 50}" stroke="#21262d"/>
+<line x1="1" x2="{W - 1}" y1="{H - 10}" y2="{H - 10}" stroke="#21262d"/>
+<g clip-path="url(#tapeclip)"><g transform="translate(124,{H - 30})"><g class="roll">{tape}<g transform="translate({tape_w:.0f},0)">{tape}</g></g></g></g>
+<rect x="1" y="{H - 49}" width="170" height="38" fill="url(#fadeL)"/>
+<rect x="{W - 61}" y="{H - 49}" width="60" height="38" fill="url(#fadeR)"/>
+<g transform="translate(14,{H - 43})">
+  <rect width="96" height="26" rx="6" fill="#0d1117" stroke="{GREEN}" stroke-opacity=".6"/>
+  <circle cx="13" cy="13" r="3.5" fill="{GREEN}" class="blink"/>
+  <text x="23" y="17.5" font-family="{MONO}" font-size="10.5" font-weight="800" fill="{GREEN}" letter-spacing="1.2">PROJECTS</text>
+</g>
 </svg>'''
 
 
@@ -477,8 +505,6 @@ def main() -> None:
     OUT.mkdir(exist_ok=True)
     (OUT / "ticker.svg").write_text(ticker_svg(p, avatar), encoding="utf-8")
     (OUT / "profile.svg").write_text(profile_svg(p, avatar), encoding="utf-8")
-    from projects import projects_svg  # noqa: PLC0415 - avoids a circular import
-    (OUT / "projects.svg").write_text(projects_svg(p), encoding="utf-8")
     print(f"wrote {OUT}/ticker.svg and profile.svg ({'demo' if demo else 'live'} data)")
 
 
