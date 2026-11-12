@@ -23,8 +23,11 @@ import urllib.request
 from html import escape
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from icons import LANG_ICONS  # noqa: E402
+
 USER = os.environ.get("GH_USER", "AndrewIsaCoder")
-TICKER = os.environ.get("TICKER", "ANDRE")
+TICKER = os.environ.get("TICKER", "TOIAN")   # rendered as $TOIAN -> "Stoian"
 WEEKS = 52
 OUT = Path(__file__).resolve().parent.parent / "assets"
 
@@ -322,14 +325,19 @@ def ticker_svg(p: dict, avatar: str) -> str:
         name = r["name"].upper()
         name = name if len(name) <= 20 else name[:19] + "…"
         ab = escape((r["lang"] or "?")[0].upper())
+        if r["lang"] in LANG_ICONS:
+            icon = (f'<circle cx="13" cy="0" r="10" fill="#0d1117" stroke="{lc}" stroke-opacity=".55"/>'
+                    f'<path transform="translate(6.5,-6.5) scale(.5417)" fill="{lc}" d="{LANG_ICONS[r["lang"]]}"/>')
+        else:
+            icon = (f'<circle cx="13" cy="0" r="10" fill="{lc}"/>'
+                    f'<text x="13" y="3.5" font-size="10" font-weight="800" text-anchor="middle" fill="#0d1117">{ab}</text>')
         x_star = 30 + len(name) * CW + 10
         x_mv = x_star + (1 + len(str(r["stars"]))) * CW + 8
         cw = x_mv + len(mv) * CW + 12
         tape_items.append(
             f'<g transform="translate({tx:.0f},0)">'
             f'<rect x="0" y="-13" width="{cw:.0f}" height="26" rx="13" fill="#1c2128" stroke="#30363d"/>'
-            f'<circle cx="13" cy="0" r="9" fill="{lc}"/>'
-            f'<text x="13" y="3.5" font-size="10" font-weight="800" text-anchor="middle" fill="#0d1117">{ab}</text>'
+            f'{icon}'
             f'<text x="30" y="4.2" class="tape">{escape(name)}</text>'
             f'<text x="{x_star:.0f}" y="4.2" class="tape" fill="#e3b341">★{r["stars"]}</text>'
             f'<text x="{x_mv:.0f}" y="4.2" class="tape" fill="{mcol}">{mv}</text></g>')
