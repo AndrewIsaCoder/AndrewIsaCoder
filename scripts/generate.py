@@ -43,14 +43,18 @@ MONO = "ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace"
 
 # ----------------------------------------------------------------------------- data
 QUERY = """
-query($login:String!, $f1:DateTime!, $t1:DateTime!, $f2:DateTime!, $t2:DateTime!) {
+query($login:String!, $since:GitTimestamp!, $f1:DateTime!, $t1:DateTime!, $f2:DateTime!, $t2:DateTime!) {
   user(login:$login) {
     name login bio avatarUrl(size:200)
     followers { totalCount }
     repositories(first:100, ownerAffiliations:OWNER, privacy:PUBLIC, isFork:false,
                  orderBy:{field:PUSHED_AT, direction:DESC}) {
       totalCount
-      nodes { name stargazerCount primaryLanguage { name } }
+      nodes {
+        name description stargazerCount pushedAt primaryLanguage { name }
+        defaultBranchRef { target { ... on Commit {
+          history(since:$since, first:100) { nodes { committedDate } } } } }
+      }
     }
     a: contributionsCollection(from:$f1, to:$t1) {
       contributionCalendar { weeks { contributionDays { date contributionCount } } }
@@ -69,7 +73,7 @@ def fetch_live() -> dict:
     start = now - dt.timedelta(days=WEEKS * 7 + 45)
     iso = lambda t: t.replace(microsecond=0).isoformat()  # noqa: E731
     body = json.dumps({"query": QUERY, "variables": {
-        "login": USER, "f1": iso(start), "t1": iso(mid), "f2": iso(mid), "t2": iso(now)}}).encode()
+        "login": USER, "since": iso(now - dt.timedelta(days=120)), "f1": iso(start), "t1": iso(mid), "f2": iso(mid), "t2": iso(now)}}).encode()
     req = urllib.request.Request("https://api.github.com/graphql", data=body, headers={
         "Authorization": f"bearer {token}", "Content-Type": "application/json",
         "User-Agent": "readme-ticker"})
@@ -89,7 +93,12 @@ def fetch_live() -> dict:
         "repo_count": u["repositories"]["totalCount"],
         "stars": sum(r["stargazerCount"] for r in repos),
         "repos": [{"name": r["name"], "stars": r["stargazerCount"],
-                   "lang": (r["primaryLanguage"] or {}).get("name")} for r in repos],
+                   "lang": (r["primaryLanguage"] or {}).get("name"),
+                   "desc": r["description"] or "", "pushed": r["pushedAt"][:10],
+                   "commits": [n["committedDate"][:10] for n in
+                               (((r.get("defaultBranchRef") or {}).get("target") or {})
+                                .get("history") or {}).get("nodes", [])]}
+                  for r in repos],
         "days": days,
     }
 
@@ -112,8 +121,11 @@ def fetch_demo() -> dict:
                "Python, SQL, R, and more. I enjoy exploring new technologies.",
         "avatar": f"https://avatars.githubusercontent.com/{USER}?s=200",
         "followers": 1, "repo_count": 21, "stars": 3,
-        "repos": [{"name": n, "stars": s, "lang": l}
-                  for n, s, l in zip(names, [1, 0, 0, 1, 0, 1, 0], langs)],
+        "repos": [{"name": n, "stars": s, "lang": l, "desc": "Demo project description",
+                   "pushed": (today - dt.timedelta(days=k * 9)).isoformat(),
+                   "commits": [(today - dt.timedelta(days=rnd.randint(0, 119))).isoformat()
+                               for _ in range(rnd.randint(0, 40 - k * 5))]}
+                  for k, (n, s, l) in enumerate(zip(names, [1, 0, 0, 1, 0, 1, 0], langs))],
         "days": days,
     }
 
@@ -465,6 +477,8 @@ def main() -> None:
     OUT.mkdir(exist_ok=True)
     (OUT / "ticker.svg").write_text(ticker_svg(p, avatar), encoding="utf-8")
     (OUT / "profile.svg").write_text(profile_svg(p, avatar), encoding="utf-8")
+    from projects import projects_svg  # noqa: PLC0415 - avoids a circular import
+    (OUT / "projects.svg").write_text(projects_svg(p), encoding="utf-8")
     print(f"wrote {OUT}/ticker.svg and profile.svg ({'demo' if demo else 'live'} data)")
 
 
